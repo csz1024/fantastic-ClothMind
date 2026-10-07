@@ -1,0 +1,95 @@
+{
+  "description": "用户已有衣物表",
+  "fields": [
+    {
+      "name": "item_id",
+      "type": "string",
+      "required": true,
+      "description": "衣物唯一标识"
+    },
+    {
+      "name": "user_id",
+      "type": "string",
+      "required": true,
+      "description": "用户标识"
+    },
+    {
+      "name": "image_ref",
+      "type": "string",
+      "required": true,
+      "description": "图片引用路径或URL"
+    },
+    {
+      "name": "category",
+      "type": "string",
+      "required": true,
+      "description": "类别：上衣/下装/外套/鞋类/包饰"
+    },
+    {
+      "name": "primary_color",
+      "type": "string",
+      "required": true,
+      "description": "主色"
+    },
+    {
+      "name": "secondary_colors",
+      "type": "array",
+      "required": false,
+      "description": "辅助色列表"
+    },
+    {
+      "name": "pattern",
+      "type": "string",
+      "required": false,
+      "description": "图案：纯色/条纹/格子/印花/无"
+    },
+    {
+      "name": "silhouette",
+      "type": "string",
+      "required": false,
+      "description": "版型：修身/宽松/直筒/A字/Oversize"
+    },
+    {
+      "name": "material_guess",
+      "type": "string",
+      "required": false,
+      "description": "材质推测，标记unknown或置信度"
+    },
+    {
+      "name": "season_tags",
+      "type": "array",
+      "required": false,
+      "description": "季节标签：春/夏/秋/冬"
+    },
+    {
+      "name": "style_tags",
+      "type": "array",
+      "required": false,
+      "description": "风格标签：休闲/正式/运动/复古等"
+    },
+    {
+      "name": "user_confirmed",
+      "type": "boolean",
+      "required": true,
+      "description": "用户是否已确认识别结果"
+    },
+    {
+      "name": "available_status",
+      "type": "string",
+      "required": true,
+      "description": "可用状态：available/unavailable/lost"
+    },
+    {
+      "name": "created_at",
+      "type": "string",
+      "required": true,
+      "description": "创建时间 ISO8601"
+    },
+    {
+      "name": "updated_at",
+      "type": "string",
+      "required": true,
+      "description": "更新时间 ISO8601"
+    }
+  ]
+}

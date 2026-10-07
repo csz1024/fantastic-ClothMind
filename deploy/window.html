@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>穿搭橱窗 · OutfitWindow</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <nav class="nav">
+    <span class="brand">🏠 OutfitWindow 搭搭橱窗</span>
+    <div class="links">
+      <a href="index.html" data-page="index">首页</a>
+      <a href="garment-upload.html" data-page="garment">衣物录入</a>
+      <a href="requirement.html" data-page="requirement">需求填写</a>
+      <a href="window.html" data-page="window">穿搭橱窗</a>
+      <a href="shopping-list.html" data-page="shopping">购物意向清单</a>
+      <a href="merchant.html" data-page="merchant">商家商品</a>
+      <a href="status.html" data-page="status">运行状态</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <h2>第 3 步：穿搭橱窗</h2>
+      <p class="small">系统已按你的衣物锚点、尺码、预算和排除项，在真实商家库存中生成 1–3 套方案。每套方案均通过预算与库存校验。</p>
+      <div id="summary" class="mt8"></div>
+    </div>
+
+    <div id="plansArea"></div>
+
+    <div class="card hidden" id="lockPanel">
+      <h3>🔒 锁定与替换操作</h3>
+      <p class="small">先点击某套方案的「选中方案」按钮，再勾选要锁定的单品；然后可以替换未锁定的单品或重新生成。</p>
+      <div id="lockControls" class="mt8"></div>
+      <div class="mt8">
+        <button class="btn btn-primary" onclick="replan()" id="btnReplan">保留锁定项，重新生成</button>
+        <button class="btn btn-danger" onclick="clearLocks()" style="margin-left:8px">清除所有锁定</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <button class="btn btn-primary" onclick="confirmPlan()">确认方案，生成购物意向清单 →</button>
+      <button class="btn" onclick="location.href='requirement.html'" style="margin-left:8px">修改需求</button>
+    </div>
+
+    <div class="disclaimer">免责声明：搭配示意图不代表真实上身效果；面料版型与实物可能存在差异。赞助商品以紫色角标标识。</div>
+  </div>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/engine.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    APP.initNav("window");
+
+    let plans = [];
+    let selectedPlanIndex = -1;
+    let lockedKeys = new Set();
+
+    function init() {
+      const item = APP.load(APP.KEYS.item);
+      const req = APP.load(APP.KEYS.req);
+      if (!item || !req) {
+        document.getElementById("plansArea").innerHTML = '<div class="card tip danger">缺少衣物或需求数据，请先完成前两个步骤。</div>';
+        return;
+      }
+      const result = EN.planOutfits({
+        anchor: item, closetItems: item.closet_mates || [],
+        products: DEMO_DATA.products, variants: DEMO_DATA.variants,
+        req,
+      });
+      plans = result.plans;
+      plans.forEach((p) => EN.validatePlan(p, req));
+
+      const sum = document.getElementById("summary");
+      sum.innerHTML = `<span class="badge ok">生成 ${result.plan_count} 套方案</span> ` +
+        `<span class="badge">可用候选商品 ${result.eligible_variant_count} 件</span> ` +
+        (result.roles_missing.length ? `<span class="badge warn">未补齐角色：${result.roles_missing.join(", ")}</span>` : "");
+
+      renderPlans();
+      document.getElementById("lockPanel").classList.remove("hidden");
+    }
+
+    function renderPlans() {
+      const area = document.getElementById("plansArea");
+      if (!plans.length) {
+        area.innerHTML = '<div class="card tip danger">未生成任何方案：可能是预算过低、尺码无库存或排除项过严。</div>';
+        return;
+      }
+      area.innerHTML = plans.map((p, idx) => {
+        const isSel = idx === selectedPlanIndex;
+        const itemsHtml = p.items.map((it) => {
+          const sponsor = it.is_sponsor ? '<span class="badge sponsor">赞助</span>' : '';
+          const price = it.source === "closet" ? '<span style="color:var(--muted)">已有</span>' : `¥${(it.price_fen / 100).toFixed(2)}`;
+          return `<div class="plan-item">
+            <div class="thumb">${it.source === "closet" ? '👕' : '🛍️'}</div>
+            <div class="meta">
+              <div><b>${it.role}</b> ${sponsor} · ${it.product_name || ""}</div>
+              <div class="small">${it.color || ""} ${it.size ? '· 尺码 ' + it.size : ''} ${it.source === "closet" ? '· 自有衣物' : ''}</div>
+            </div>
+            <div class="price">${price}</div>
+          </div>`;
+        }).join("");
+
+        const checks = (p.validated && p.validated.checks) || [];
+        const checkBad = checks.filter((c) => !c.passed);
+        const statusBadge = checkBad.length
+          ? `<span class="badge danger">校验未通过：${checkBad.map((c) => c.check).join(", ")}</span>`
+          : `<span class="badge ok">校验通过</span>`;
+
+        return `<div class="plan-card ${isSel ? 'selected' : ''}" onclick="selectPlan(${idx})">
+          <div class="plan-head">
+            <b>${p.plan_label}</b>
+            ${statusBadge}
+            <span class="badge">购买小计 ¥${(p.purchase_subtotal_fen / 100).toFixed(2)}</span>
+          </div>
+          <div class="plan-items">${itemsHtml}</div>
+          <div class="small mt8">${p.reasoning || ""}</div>
+        </div>`;
+      }).join("");
+
+      renderLockControls();
+    }
+
+    function selectPlan(idx) {
+      selectedPlanIndex = idx;
+      renderPlans();
+      APP.log("plan_selected", { plan_label: plans[idx].plan_label });
+    }
+
+    function renderLockControls() {
+      if (selectedPlanIndex < 0) {
+        document.getElementById("lockControls").innerHTML = '<p class="small">请先点击上方某套方案以进行锁定/替换操作。</p>';
+        return;
+      }
+      const p = plans[selectedPlanIndex];
+      const html = p.items.map((it, i) => {
+        const lk = it.lock_key;
+        const checked = lockedKeys.has(lk) ? 'checked' : '';
+        return `<div class="check-row">
+          <input type="checkbox" id="lck_${i}" ${checked} onchange="toggleLock('${lk}', this.checked)">
+          <label for="lck_${i}">${it.role} · ${it.product_name || ""} ${it.is_sponsor ? '<span class="badge sponsor">赞助</span>' : ''}</label>
+        </div>`;
+      }).join("");
+      document.getElementById("lockControls").innerHTML = html;
+    }
+
+    function toggleLock(lk, on) {
+      if (on) lockedKeys.add(lk);
+      else lockedKeys.delete(lk);
+      APP.save(APP.KEYS.locked, [...lockedKeys]);
+      APP.log("lock_toggled", { lock_key: lk, on });
+    }
+
+    function clearLocks() {
+      lockedKeys.clear();
+      APP.save(APP.KEYS.locked, []);
+      renderLockControls();
+      APP.log("locks_cleared", {});
+    }
+
+    function replan() {
+      const req = APP.load(APP.KEYS.req);
+      if (!req) return;
+      // 将当前锁定项写回需求
+      req.hard.locked_items = [...lockedKeys].map((k) => {
+        const [source, id] = k.split(":");
+        return source === "merchant" ? { source, variant_id: id } : { source, item_id: id };
+      });
+      APP.save(APP.KEYS.req, req);
+
+      const item = APP.load(APP.KEYS.item);
+      const result = EN.planOutfits({
+        anchor: item, closetItems: item.closet_mates || [],
+        products: DEMO_DATA.products, variants: DEMO_DATA.variants,
+        req,
+      });
+      plans = result.plans;
+      plans.forEach((p) => EN.validatePlan(p, req));
+      selectedPlanIndex = plans.length ? 0 : -1;
+      renderPlans();
+      APP.log("replan_executed", { plan_count: plans.length });
+      alert("已按锁定项重新生成方案：" + (plans.length ? `生成 ${plans.length} 套` : "无可用方案（请放宽约束）"));
+    }
+
+    function confirmPlan() {
+      if (selectedPlanIndex < 0) { alert("请先点击选择一套方案。"); return; }
+      const plan = plans[selectedPlanIndex];
+      APP.save(APP.KEYS.confirmed, plan);
+      APP.log("plan_confirmed", { plan_id: plan.plan_id, plan_label: plan.plan_label });
+      location.href = "shopping-list.html";
+    }
+
+    init();
+  </script>
+</body>
+</html>

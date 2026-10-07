@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>运行状态与日志 · OutfitWindow</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <nav class="nav">
+    <span class="brand">🏠 OutfitWindow 搭搭橱窗</span>
+    <div class="links">
+      <a href="index.html" data-page="index">首页</a>
+      <a href="garment-upload.html" data-page="garment">衣物录入</a>
+      <a href="requirement.html" data-page="requirement">需求填写</a>
+      <a href="window.html" data-page="window">穿搭橱窗</a>
+      <a href="shopping-list.html" data-page="shopping">购物意向清单</a>
+      <a href="merchant.html" data-page="merchant">商家商品</a>
+      <a href="status.html" data-page="status">运行状态</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <h2>会话状态快照</h2>
+      <div id="stateSnapshot" class="mt8"></div>
+    </div>
+
+    <div class="card">
+      <h2>执行日志（浏览器端）</h2>
+      <div id="logs" class="mt8"></div>
+      <button class="btn" onclick="clearLogs()">清空日志</button>
+    </div>
+
+    <div class="card">
+      <h2>数据完整性检查</h2>
+      <div id="dataCheck" class="mt8"></div>
+    </div>
+
+    <div class="card">
+      <h2>平台能力检查（静态报告）</h2>
+      <div class="small" style="line-height:1.8">
+        <div>✅ Python 3.13.13（本地环境可用）</div>
+        <div>✅ openpyxl / python-docx / Pillow / requests（已安装）</div>
+        <div>✅ 本地文件读写（C:\ 用户目录）</div>
+        <div>✅ 视觉识别与图片上传（浏览器端 File API）</div>
+        <div>❌ Miaoda 平台部署（无 API Key，不可用）</div>
+        <div>❌ 真实商家库存 API（不可用，使用 CSV 模拟）</div>
+        <div>❌ 支付接口（不可用，止步「购物意向清单」）</div>
+        <div>❌ 后端数据库 / HTTP 服务端（不可用，localStorage 降级）</div>
+        <div>⚠️ 图片合成 / 3D 建模（不可用，降级为商品卡片网格）</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/engine.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    APP.initNav("status");
+
+    function init() {
+      // 状态快照
+      const item = APP.load(APP.KEYS.item);
+      const req = APP.load(APP.KEYS.req);
+      const plansMeta = APP.load(APP.KEYS.plans);
+      const confirmed = APP.load(APP.KEYS.confirmed);
+      const locked = APP.load(APP.KEYS.locked, []);
+
+      document.getElementById("stateSnapshot").innerHTML = `
+        <div class="grid grid-2">
+          <div>衣物录入：<b>${item ? '✅ 已确认（' + item.category + '）' : '❌ 未录入'}</b></div>
+          <div>需求解析：<b>${req ? '✅ 已确认（' + req.occasion + ' / ¥' + (req.budget_fen/100) + '）' : '❌ 未填写'}</b></div>
+          <div>方案生成：<b>${plansMeta ? '✅ ' + plansMeta.result.plan_count + ' 套' : '❌ 未生成'}</b></div>
+          <div>方案确认：<b>${confirmed ? '✅ 已确认（' + confirmed.plan_label + '）' : '❌ 未确认'}</b></div>
+          <div>锁定项数：<b>${locked.length}</b></div>
+          <div>购物清单：<b>${confirmed ? '可生成' : '待确认方案后生成'}</b></div>
+        </div>
+      `;
+
+      // 日志
+      const logs = APP.load(APP.KEYS.logs, []);
+      document.getElementById("logs").innerHTML = logs.length
+        ? logs.slice().reverse().map((e) =>
+            `<div class="log-line"><span class="ts">${e.ts.split("T").join(" ").slice(0,19)}</span> ${e.event_type}${e.operation && e.operation.plan_count !== undefined ? ' (' + e.operation.plan_count + '套)' : ''}</div>`
+          ).join("")
+        : '<p class="small">暂无日志。</p>';
+
+      // 数据完整性检查
+      const missingPids = new Set(DEMO_DATA.variants.map((v) => v.product_id));
+      DEMO_DATA.products.forEach((p) => missingPids.delete(p.product_id));
+      const dupSkus = [];
+      const seen = new Set();
+      DEMO_DATA.products.forEach((p) => { if (seen.has(p.sku_id)) dupSkus.push(p.sku_id); seen.add(p.sku_id); });
+      const zeroPrice = DEMO_DATA.variants.filter((v) => v.price_fen < 0).map((v) => v.variant_id);
+      document.getElementById("dataCheck").innerHTML = `
+        <div>商品-变体关联完整性：<b>${missingPids.size ? '❌ 缺失 ' + [...missingPids].join(",") : '✅ 全部关联'}</b></div>
+        <div>SKU 唯一性：<b>${dupSkus.length ? '❌ 重复 ' + dupSkus.join(",") : '✅ 无重复'}</b></div>
+        <div>价格缺失变体：<b>${zeroPrice.length ? zeroPrice.join(",") : '无'}</b></div>
+        <div>演示数据总数：<b>${DEMO_DATA.products.length} 商品 / ${DEMO_DATA.variants.length} 变体</b></div>
+      `;
+    }
+
+    function clearLogs() {
+      localStorage.removeItem(APP.KEYS.logs);
+      init();
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+{
+  "description": "穿搭方案表",
+  "fields": [
+    {
+      "name": "plan_id",
+      "type": "string",
+      "required": true,
+      "description": "方案唯一标识"
+    },
+    {
+      "name": "session_id",
+      "type": "string",
+      "required": true,
+      "description": "关联会话ID"
+    },
+    {
+      "name": "plan_version",
+      "type": "integer",
+      "required": true,
+      "description": "方案版本号"
+    },
+    {
+      "name": "plan_label",
+      "type": "string",
+      "required": true,
+      "description": "方案标签：已有优先/预算优先/风格优先"
+    },
+    {
+      "name": "purchase_subtotal_fen",
+      "type": "integer",
+      "required": true,
+      "description": "商品小计（分）"
+    },
+    {
+      "name": "known_fee_fen",
+      "type": "integer",
+      "required": true,
+      "description": "已知费用（分）"
+    },
+    {
+      "name": "unknown_fee_note",
+      "type": "string",
+      "required": false,
+      "description": "未知费用说明"
+    },
+    {
+      "name": "validation_status",
+      "type": "string",
+      "required": true,
+      "description": "校验状态：passed/failed/partial"
+    },
+    {
+      "name": "validation_result_json",
+      "type": "object",
+      "required": true,
+      "description": "校验结果明细"
+    },
+    {
+      "name": "inventory_snapshot_at",
+      "type": "string",
+      "required": true,
+      "description": "库存快照时间"
+    },
+    {
+      "name": "created_at",
+      "type": "string",
+      "required": true,
+      "description": "创建时间"
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "description": "穿搭会话表",
+  "fields": [
+    {
+      "name": "session_id",
+      "type": "string",
+      "required": true,
+      "description": "会话唯一标识"
+    },
+    {
+      "name": "user_id",
+      "type": "string",
+      "required": true,
+      "description": "用户标识"
+    },
+    {
+      "name": "anchor_item_id",
+      "type": "string",
+      "required": true,
+      "description": "锚点衣物ID（用户上传的那件）"
+    },
+    {
+      "name": "occasion",
+      "type": "string",
+      "required": true,
+      "description": "场合：上课/面试/社团活动等"
+    },
+    {
+      "name": "temperature_text",
+      "type": "string",
+      "required": false,
+      "description": "温度或天气描述"
+    },
+    {
+      "name": "budget_fen",
+      "type": "integer",
+      "required": true,
+      "description": "最高预算（分）"
+    },
+    {
+      "name": "size_requirements_json",
+      "type": "object",
+      "required": true,
+      "description": "尺码需求：{上装:M, 下装:L, 鞋类:39}"
+    },
+    {
+      "name": "hard_constraints_json",
+      "type": "object",
+      "required": true,
+      "description": "硬约束：{排除颜色:[], 排除版型:[], 排除类别:[]}"
+    },
+    {
+      "name": "soft_preferences_json",
+      "type": "object",
+      "required": false,
+      "description": "软偏好：{风格:[], 优先使用已有:true}"
+    },
+    {
+      "name": "excluded_attributes_json",
+      "type": "object",
+      "required": false,
+      "description": "排除属性"
+    },
+    {
+      "name": "locked_items_json",
+      "type": "object",
+      "required": false,
+      "description": "锁定项：{sku_id: reason}"
+    },
+    {
+      "name": "current_state",
+      "type": "string",
+      "required": true,
+      "description": "当前状态：input→parsed→planned→validated→confirmed"
+    },
+    {
+      "name": "created_at",
+      "type": "string",
+      "required": true,
+      "description": "创建时间"
+    },
+    {
+      "name": "updated_at",
+      "type": "string",
+      "required": true,
+      "description": "更新时间"
+    }
+  ]
+}

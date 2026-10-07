@@ -1,0 +1,65 @@
+{
+  "description": "交互日志表",
+  "fields": [
+    {
+      "name": "event_id",
+      "type": "string",
+      "required": true,
+      "description": "事件唯一标识"
+    },
+    {
+      "name": "session_id",
+      "type": "string",
+      "required": true,
+      "description": "关联会话ID"
+    },
+    {
+      "name": "action_type",
+      "type": "string",
+      "required": true,
+      "description": "操作类型"
+    },
+    {
+      "name": "parsed_operation_json",
+      "type": "object",
+      "required": true,
+      "description": "解析后的结构化操作"
+    },
+    {
+      "name": "state_before",
+      "type": "object",
+      "required": false,
+      "description": "操作前状态"
+    },
+    {
+      "name": "state_after",
+      "type": "object",
+      "required": false,
+      "description": "操作后状态"
+    },
+    {
+      "name": "result_status",
+      "type": "string",
+      "required": true,
+      "description": "结果：success/failed/partial"
+    },
+    {
+      "name": "error_code",
+      "type": "string",
+      "required": false,
+      "description": "错误码"
+    },
+    {
+      "name": "plan_version",
+      "type": "integer",
+      "required": false,
+      "description": "关联方案版本"
+    },
+    {
+      "name": "created_at",
+      "type": "string",
+      "required": true,
+      "description": "创建时间"
+    }
+  ]
+}

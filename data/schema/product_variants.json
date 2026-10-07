@@ -1,0 +1,59 @@
+{
+  "description": "商品变体表（尺码/颜色/价格/库存）",
+  "fields": [
+    {
+      "name": "variant_id",
+      "type": "string",
+      "required": true,
+      "description": "变体唯一标识"
+    },
+    {
+      "name": "product_id",
+      "type": "string",
+      "required": true,
+      "description": "关联商品ID"
+    },
+    {
+      "name": "size_label",
+      "type": "string",
+      "required": true,
+      "description": "尺码标签：S/M/L/XL/均码/38/39等"
+    },
+    {
+      "name": "color_label",
+      "type": "string",
+      "required": false,
+      "description": "颜色标签"
+    },
+    {
+      "name": "price_fen",
+      "type": "integer",
+      "required": true,
+      "description": "价格（分），缺失时标记为-1"
+    },
+    {
+      "name": "stock_qty",
+      "type": "integer",
+      "required": true,
+      "description": "库存数量，0表示无货"
+    },
+    {
+      "name": "shipping_fee_fen",
+      "type": "integer",
+      "required": false,
+      "description": "运费（分），unknown时标记为-1"
+    },
+    {
+      "name": "inventory_status",
+      "type": "string",
+      "required": true,
+      "description": "库存状态：in_stock/low_stock/out_of_stock/unknown"
+    },
+    {
+      "name": "inventory_updated_at",
+      "type": "string",
+      "required": true,
+      "description": "库存更新时间 ISO8601"
+    }
+  ]
+}

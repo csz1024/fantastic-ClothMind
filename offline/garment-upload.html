@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>衣物录入 · OutfitWindow</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <nav class="nav">
+    <span class="brand">🏠 OutfitWindow 搭搭橱窗</span>
+    <div class="links">
+      <a href="index.html" data-page="index">首页</a>
+      <a href="garment-upload.html" data-page="garment">衣物录入</a>
+      <a href="requirement.html" data-page="requirement">需求填写</a>
+      <a href="window.html" data-page="window">穿搭橱窗</a>
+      <a href="shopping-list.html" data-page="shopping">购物意向清单</a>
+      <a href="merchant.html" data-page="merchant">商家商品</a>
+      <a href="status.html" data-page="status">运行状态</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <h2>第 1 步：录入你的衣物</h2>
+      <p class="small mb8">MVP 采用图片 + 人工确认的录入方式：选择一张单品照片（不离开本机、不上传任何服务器），并确认类别与属性。系统不做人脸与身份分析。</p>
+
+      <label class="f">1) 选择衣物图片（可选，仅本地预览）</label>
+      <input type="file" id="fileInput" accept="image/*" onchange="onFile(this)">
+
+      <div class="grid grid-2 mt16">
+        <div>
+          <div id="previewWrap" class="hidden center" style="border:1px dashed var(--border);border-radius:10px;padding:10px">
+            <img id="preview" style="max-width:100%;max-height:240px;border-radius:8px" alt="预览">
+            <p class="small">图片仅在本机浏览器预览，不会上传。</p>
+          </div>
+        </div>
+        <div>
+          <label class="f">2) 隐私确认（必选）</label>
+          <div class="check-row">
+            <input type="checkbox" id="privacyOk">
+            <span>我确认：照片仅包含衣物单品，<b>不含他人人脸、证件、快递单、门牌等隐私信息</b>。</span>
+          </div>
+          <div class="check-row">
+            <input type="checkbox" id="privacyOwn">
+            <span>我确认：该衣物为本人所有（或已获授权可用于搭配展示）。</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>衣物属性卡（人工确认）</h2>
+      <div class="grid grid-2">
+        <div>
+          <label class="f">类别 *</label>
+          <select id="category">
+            <option value="上衣">上衣</option>
+            <option value="下装">下装</option>
+            <option value="外套">外套</option>
+            <option value="鞋类">鞋类</option>
+            <option value="包饰">包饰</option>
+          </select>
+        </div>
+        <div>
+          <label class="f">主色 *</label>
+          <input type="text" id="primaryColor" placeholder="例如：白色" value="">
+        </div>
+        <div>
+          <label class="f">图案</label>
+          <select id="pattern">
+            <option value="纯色" selected>纯色</option>
+            <option value="条纹">条纹</option>
+            <option value="格子">格子</option>
+            <option value="印花">印花</option>
+            <option value="无">无</option>
+          </select>
+        </div>
+        <div>
+          <label class="f">版型</label>
+          <select id="silhouette">
+            <option value="宽松">宽松</option>
+            <option value="修身">修身</option>
+            <option value="直筒">直筒</option>
+            <option value="A字">A字</option>
+            <option value="Oversize">Oversize</option>
+          </select>
+        </div>
+        <div>
+          <label class="f">风格标签（逗号分隔）</label>
+          <input type="text" id="styleTags" placeholder="例如：休闲, 运动" value="休闲">
+        </div>
+        <div>
+          <label class="f">季节标签（逗号分隔）</label>
+          <input type="text" id="seasonTags" placeholder="例如：春, 夏" value="春, 夏">
+        </div>
+        <div>
+          <label class="f">材质（推测，可不填）</label>
+          <input type="text" id="material" placeholder="例如：棉（unknown 也可以）" value="unknown">
+        </div>
+      </div>
+      <button class="btn btn-primary mt16" onclick="saveItem()">确认衣物卡，下一步填写需求</button>
+      <button class="btn mt16" onclick="loadDemo()" style="margin-left:8px">填入演示衣物（白色T恤）</button>
+    </div>
+  </div>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/engine.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    APP.initNav("garment");
+
+    function onFile(input) {
+      const f = input.files && input.files[0];
+      if (!f) return;
+      const url = URL.createObjectURL(f);
+      document.getElementById("preview").src = url;
+      document.getElementById("previewWrap").classList.remove("hidden");
+      // 图片只做本地预览；MVP 不做真实视觉识别，由用户填写属性
+      APP.log("image_selected", { name: f.name, size: f.size });
+    }
+
+    function loadDemo() {
+      document.getElementById("category").value = "上衣";
+      document.getElementById("primaryColor").value = "白色";
+      document.getElementById("pattern").value = "纯色";
+      document.getElementById("silhouette").value = "宽松";
+      document.getElementById("styleTags").value = "休闲";
+      document.getElementById("seasonTags").value = "春, 夏";
+      document.getElementById("material").value = "棉";
+      APP.log("demo_item_filled", {});
+      alert("已填入演示衣物：白色宽松纯色T恤（与测试用例 C001 一致）");
+    }
+
+    function saveItem() {
+      if (!document.getElementById("privacyOk").checked || !document.getElementById("privacyOwn").checked) {
+        alert("请先完成两项隐私确认。");
+        return;
+      }
+      const category = document.getElementById("category").value;
+      const primaryColor = document.getElementById("primaryColor").value.trim();
+      if (!primaryColor) { alert("请填写主色。"); return; }
+
+      const tag = (v) => v.split(/[,，]/).map((s) => s.trim()).filter(Boolean);
+      const item = {
+        item_id: "C" + Math.floor(Math.random() * 90000 + 10000),
+        user_id: "u-web",
+        category,
+        primary_color: primaryColor,
+        pattern: document.getElementById("pattern").value,
+        silhouette: document.getElementById("silhouette").value,
+        style_tags: tag(document.getElementById("styleTags").value),
+        season_tags: tag(document.getElementById("seasonTags").value),
+        material_guess: document.getElementById("material").value.trim() || "unknown",
+        user_confirmed: true,
+        available_status: "available",
+        source: "user_input",
+        image_ref: "",
+        closet_mates: [],
+      };
+      APP.save(APP.KEYS.item, item);
+      APP.log("item_confirmed", { item_id: item.item_id, category, color: primaryColor });
+      location.href = "requirement.html";
+    }
+  </script>
+</body>
+</html>

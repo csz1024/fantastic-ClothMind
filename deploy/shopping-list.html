@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>购物意向清单 · OutfitWindow</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <nav class="nav">
+    <span class="brand">🏠 OutfitWindow 搭搭橱窗</span>
+    <div class="links">
+      <a href="index.html" data-page="index">首页</a>
+      <a href="garment-upload.html" data-page="garment">衣物录入</a>
+      <a href="requirement.html" data-page="requirement">需求填写</a>
+      <a href="window.html" data-page="window">穿搭橱窗</a>
+      <a href="shopping-list.html" data-page="shopping">购物意向清单</a>
+      <a href="merchant.html" data-page="merchant">商家商品</a>
+      <a href="status.html" data-page="status">运行状态</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <h2>第 4 步：购物意向清单</h2>
+      <p class="small">当前状态：<span id="listStatus" class="badge">—</span></p>
+      <p class="small mt8">这是你的购物意向汇总，<b>不构成下单</b>。最终价格与库存请以前往商家页面复核为准。</p>
+    </div>
+
+    <div class="card">
+      <h3>自有衣物（不计入购买金额）</h3>
+      <div id="closetItems"></div>
+    </div>
+
+    <div class="card">
+      <h3>待购买商品</h3>
+      <div id="purchaseItems"></div>
+    </div>
+
+    <div class="card">
+      <h3>费用明细</h3>
+      <div id="financial"></div>
+    </div>
+
+    <div class="card">
+      <h3>待确认事项</h3>
+      <div id="pending"></div>
+    </div>
+
+    <div class="card">
+      <button class="btn btn-primary" onclick="location.href='window.html'">返回橱窗调整方案</button>
+      <button class="btn" onclick="location.href='index.html'">回到首页重新来</button>
+    </div>
+
+    <div id="disclaimerBox"></div>
+  </div>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/engine.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    APP.initNav("shopping");
+
+    function init() {
+      const plan = APP.load(APP.KEYS.confirmed);
+      if (!plan) {
+        document.querySelector(".container").innerHTML = '<div class="card tip danger">尚未确认方案。请先前往穿搭橱窗选择并确认一套方案。</div><button class="btn" onclick="location.href=\'window.html\'">前往穿搭橱窗</button>';
+        return;
+      }
+      const sl = EN.buildShoppingList(plan, new Date().toISOString());
+
+      document.getElementById("listStatus").textContent = sl.status;
+
+      // 自有衣物
+      document.getElementById("closetItems").innerHTML = sl.closet_items.length
+        ? sl.closet_items.map((c) => `<div class="catalog-row">
+            <div class="thumb">👕</div>
+            <div style="flex:1"><b>${c.role}</b> · ${c.name}</div>
+          </div>`).join("")
+        : '<p class="small">无自有衣物（锚点可能被标记为商家商品，或在衣橱中未单独列出）。</p>';
+
+      // 待购买
+      document.getElementById("purchaseItems").innerHTML = sl.purchase_items.length
+        ? sl.purchase_items.map((p) => {
+            const sponsor = p.is_sponsor ? '<span class="badge sponsor">赞助</span>' : '';
+            const btn = p.has_url
+              ? `<a class="btn btn-ghost" href="${p.product_url}" target="_blank" rel="noopener">前往商品页</a>`
+              : '<span class="badge warn">暂无商品链接</span>';
+            return `<div class="catalog-row">
+              <div class="thumb">🛍️</div>
+              <div style="flex:1">
+                <div><b>${p.role}</b> ${sponsor} · ${p.name}</div>
+                <div class="small">${p.color || ''} · 尺码 ${p.size} · ¥${(p.price_fen / 100).toFixed(2)}</div>
+              </div>
+              <div>${btn}</div>
+            </div>`;
+          }).join("")
+        : '<p class="small">无待购买商品（方案全部使用自有衣物）。</p>';
+
+      // 费用
+      const fs = sl.financial_summary;
+      document.getElementById("financial").innerHTML = `
+        <div class="grid grid-2">
+          <div>商品小计：<b>¥${(fs.purchase_subtotal_fen / 100).toFixed(2)}</b></div>
+          <div>已知运费：<b>¥${(fs.known_fee_fen / 100).toFixed(2)}</b></div>
+          <div>未知运费件数：<b>${fs.unknown_fee_list.length}</b></div>
+          <div>最终金额确定：<b>${fs.final_amount_determined ? '是' : '否'}</b></div>
+        </div>
+        <div class="tip mt8">${fs.message}</div>
+        ${fs.final_amount_fen !== null ? `<div class="mt8">预估合计：<b>¥${(fs.final_amount_fen / 100).toFixed(2)}</b></div>` : ''}
+      `;
+
+      // 待确认
+      document.getElementById("pending").innerHTML = sl.pending_confirmations.map((t) => `<div class="check-row">⚠️ ${t}</div>`).join("");
+
+      // 免责声明
+      document.getElementById("disclaimerBox").innerHTML = `<div class="disclaimer">${sl.disclaimer}</div>`;
+
+      APP.log("shopping_list_rendered", { list_id: sl.list_id, item_count: sl.purchase_items.length });
+    }
+
+    init();
+  </script>
+</body>
+</html>

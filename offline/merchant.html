@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商家商品管理 · OutfitWindow</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <nav class="nav">
+    <span class="brand">🏠 OutfitWindow 搭搭橱窗</span>
+    <div class="links">
+      <a href="index.html" data-page="index">首页</a>
+      <a href="garment-upload.html" data-page="garment">衣物录入</a>
+      <a href="requirement.html" data-page="requirement">需求填写</a>
+      <a href="window.html" data-page="window">穿搭橱窗</a>
+      <a href="shopping-list.html" data-page="shopping">购物意向清单</a>
+      <a href="merchant.html" data-page="merchant">商家商品</a>
+      <a href="status.html" data-page="status">运行状态</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <h2>演示商品库概览</h2>
+      <p class="small">数据类型：<span class="badge">SYNTHETIC_DEMO</span> 仅用于功能演示，不含真实购买链接与真实库存。</p>
+      <div id="stats" class="mt8"></div>
+    </div>
+
+    <div class="card">
+      <h3>筛选</h3>
+      <div class="grid grid-3">
+        <div>
+          <label class="f">类别</label>
+          <select id="fCat" onchange="render()"><option value="">全部</option></select>
+        </div>
+        <div>
+          <label class="f">销售状态</label>
+          <select id="fStatus" onchange="render()">
+            <option value="">全部</option><option value="on_sale">在售</option><option value="off_shelf">下架</option><option value="discontinued">停产</option>
+          </select>
+        </div>
+        <div>
+          <label class="f">搜索</label>
+          <input type="text" id="fSearch" placeholder="名称 / SKU" oninput="render()">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>商品列表</h3>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr><th>SKU</th><th>名称</th><th>类别</th><th>状态</th><th>变体数</th><th>价格范围</th><th>赞助</th><th>图片</th></tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>边界状态标注（MVP 测试集）</h3>
+      <div class="small" id="boundaryNotes"></div>
+    </div>
+  </div>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/engine.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    APP.initNav("merchant");
+
+    function init() {
+      const cats = [...new Set(DEMO_DATA.products.map((p) => p.category))].sort();
+      const sel = document.getElementById("fCat");
+      cats.forEach((c) => { const o = document.createElement("option"); o.value = c; o.textContent = c; sel.appendChild(o); });
+
+      const total = DEMO_DATA.products.length;
+      const variants = DEMO_DATA.variants.length;
+      const sponsor = DEMO_DATA.products.filter((p) => p.is_sponsor).length;
+      const off = DEMO_DATA.products.filter((p) => p.sale_status !== "on_sale").length;
+      const noPrice = DEMO_DATA.variants.filter((v) => v.price_fen < 0).length;
+      const zeroStock = DEMO_DATA.variants.filter((v) => v.stock_qty === 0).length;
+      const unknownFee = DEMO_DATA.variants.filter((v) => v.shipping_fee_fen < 0).length;
+      document.getElementById("stats").innerHTML = `
+        <span class="badge">商品 ${total} 件</span>
+        <span class="badge">变体 ${variants} 条</span>
+        <span class="badge">赞助 ${sponsor} 件</span>
+        <span class="badge warn">非在售 ${off} 件</span>
+        <span class="badge warn">价格缺失 ${noPrice} 条</span>
+        <span class="badge warn">零库存 ${zeroStock} 条</span>
+        <span class="badge warn">运费未知 ${unknownFee} 条</span>
+      `;
+
+      document.getElementById("boundaryNotes").innerHTML = `
+        <ul style="padding-left:18px">
+          <li><b>M码缺货：</b>OW-TOP-003 / V006（M码库存0）</li>
+          <li><b>价格缺失变体：</b>V008, V009, V049, V050, V051, V056（price_fen=-1）</li>
+          <li><b>下架商品：</b>OW-BTM-003（off_shelf）、OW-ACC-003（off_shelf）、OW-OUT-006（discontinued）</li>
+          <li><b>运费未知：</b>V019, V020, V043, V044, V045（shipping_fee_fen=-1）</li>
+          <li><b>超预算：</b>OW-OUT-004 599元（默认预算500元时会被过滤）</li>
+          <li><b>赞助商品：</b>OW-TOP-006（is_sponsor=1）</li>
+          <li><b>旧库存时间：</b>部分变体 inventory_updated_at 为 2026-09-07</li>
+          <li><b>无购买链接：</b>6 件商品 product_url 为空</li>
+        </ul>
+      `;
+
+      render();
+    }
+
+    function render() {
+      const cat = document.getElementById("fCat").value;
+      const status = document.getElementById("fStatus").value;
+      const q = document.getElementById("fSearch").value.trim().toLowerCase();
+
+      const rows = DEMO_DATA.products.filter((p) => {
+        if (cat && p.category !== cat) return false;
+        if (status && p.sale_status !== status) return false;
+        if (q && !((p.sku_id + p.product_name).toLowerCase().includes(q))) return false;
+        return true;
+      });
+
+      const byPid = {};
+      DEMO_DATA.products.forEach((p) => (byPid[p.product_id] = p));
+      const vmap = {};
+      DEMO_DATA.variants.forEach((v) => {
+        vmap[v.product_id] = vmap[v.product_id] || [];
+        vmap[v.product_id].push(v);
+      });
+
+      document.getElementById("tbody").innerHTML = rows.map((p) => {
+        const vs = vmap[p.product_id] || [];
+        const prices = vs.map((v) => v.price_fen).filter((x) => x >= 0);
+        const priceText = prices.length ? `¥${(Math.min(...prices) / 100).toFixed(0)}–${(Math.max(...prices) / 100).toFixed(0)}` : "—";
+        const sponsor = p.is_sponsor ? '<span class="badge sponsor">赞助</span>' : '';
+        const st = p.sale_status === "on_sale" ? '<span class="badge ok">在售</span>' : '<span class="badge danger">' + p.sale_status + '</span>';
+        return `<tr>
+          <td><b>${p.sku_id}</b></td>
+          <td>${p.product_name} ${sponsor}</td>
+          <td>${p.category}</td>
+          <td>${st}</td>
+          <td>${vs.length}</td>
+          <td>${priceText}</td>
+          <td>${p.is_sponsor ? '是' : '否'}</td>
+          <td class="small">${p.image_ref || '—'}</td>
+        </tr>`;
+      }).join("");
+    }
+
+    init();
+  </script>
+</body>
+</html>

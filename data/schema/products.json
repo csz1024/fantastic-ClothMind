@@ -1,0 +1,113 @@
+{
+  "description": "商家商品主表",
+  "fields": [
+    {
+      "name": "product_id",
+      "type": "string",
+      "required": true,
+      "description": "商品唯一标识"
+    },
+    {
+      "name": "merchant_id",
+      "type": "string",
+      "required": true,
+      "description": "商家标识"
+    },
+    {
+      "name": "sku_id",
+      "type": "string",
+      "required": true,
+      "description": "SKU编号"
+    },
+    {
+      "name": "product_name",
+      "type": "string",
+      "required": true,
+      "description": "商品名称"
+    },
+    {
+      "name": "category",
+      "type": "string",
+      "required": true,
+      "description": "类别：上衣/下装/外套/鞋类/包饰"
+    },
+    {
+      "name": "color_tags",
+      "type": "array",
+      "required": true,
+      "description": "颜色标签"
+    },
+    {
+      "name": "material",
+      "type": "string",
+      "required": false,
+      "description": "材质"
+    },
+    {
+      "name": "pattern",
+      "type": "string",
+      "required": false,
+      "description": "图案"
+    },
+    {
+      "name": "silhouette",
+      "type": "string",
+      "required": false,
+      "description": "版型"
+    },
+    {
+      "name": "style_tags",
+      "type": "array",
+      "required": false,
+      "description": "风格标签"
+    },
+    {
+      "name": "season_tags",
+      "type": "array",
+      "required": false,
+      "description": "季节标签"
+    },
+    {
+      "name": "scene_tags",
+      "type": "array",
+      "required": false,
+      "description": "场景标签：上课/面试/社团活动等"
+    },
+    {
+      "name": "image_ref",
+      "type": "string",
+      "required": false,
+      "description": "商品图片引用"
+    },
+    {
+      "name": "product_url",
+      "type": "string",
+      "required": false,
+      "description": "商品链接，无则空"
+    },
+    {
+      "name": "sale_status",
+      "type": "string",
+      "required": true,
+      "description": "销售状态：on_sale/off_shelf/discontinued"
+    },
+    {
+      "name": "data_type",
+      "type": "string",
+      "required": true,
+      "description": "数据类型：REAL/SYNTHETIC_DEMO"
+    },
+    {
+      "name": "rights_status",
+      "type": "string",
+      "required": true,
+      "description": "图片权利状态：owned/demo_placeholder/external_licensed"
+    },
+    {
+      "name": "updated_at",
+      "type": "string",
+      "required": true,
+      "description": "更新时间 ISO8601"
+    }
+  ]
+}

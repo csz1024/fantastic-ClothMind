@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>需求填写 · OutfitWindow</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <nav class="nav">
+    <span class="brand">🏠 OutfitWindow 搭搭橱窗</span>
+    <div class="links">
+      <a href="index.html" data-page="index">首页</a>
+      <a href="garment-upload.html" data-page="garment">衣物录入</a>
+      <a href="requirement.html" data-page="requirement">需求填写</a>
+      <a href="window.html" data-page="window">穿搭橱窗</a>
+      <a href="shopping-list.html" data-page="shopping">购物意向清单</a>
+      <a href="merchant.html" data-page="merchant">商家商品</a>
+      <a href="status.html" data-page="status">运行状态</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <h2>第 2 步：填写穿搭需求</h2>
+
+      <label class="f">使用场合 *</label>
+      <select id="occasion">
+        <option value="上课与日常通勤">上课与日常通勤</option>
+        <option value="面试与答辩">面试与答辩</option>
+        <option value="社团活动与普通社交">社团活动与普通社交</option>
+      </select>
+
+      <label class="f">天气/温度描述</label>
+      <input type="text" id="temperature" placeholder="例如：15-20度，秋季" value="15-20度，秋季">
+
+      <div class="grid grid-2 mt16">
+        <div>
+          <label class="f">预算（元）*</label>
+          <input type="number" id="budget" min="1" step="1" value="500">
+        </div>
+        <div style="padding-top:26px">
+          <button class="btn" onclick="fillDemo()">填入演示需求</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>尺码（按品类，用于库存与尺码校验）*</h2>
+      <div class="grid grid-2">
+        <div>
+          <label class="f">上衣尺码</label>
+          <select id="size_top"><option value="S">S</option><option value="M" selected>M</option><option value="L">L</option><option value="均码">均码</option></select>
+        </div>
+        <div>
+          <label class="f">下装尺码</label>
+          <select id="size_bottom"><option value="S">S</option><option value="M">M</option><option value="L" selected>L</option><option value="均码">均码</option></select>
+        </div>
+        <div>
+          <label class="f">外套尺码</label>
+          <select id="size_out"><option value="S">S</option><option value="M" selected>M</option><option value="L">L</option><option value="均码">均码</option></select>
+        </div>
+        <div>
+          <label class="f">鞋类尺码</label>
+          <select id="size_shoe"><option value="39">39</option><option value="40" selected>40</option><option value="41">41</option><option value="均码">均码</option></select>
+        </div>
+      </div>
+      <p class="small mt8">包饰一律按「均码」处理。</p>
+    </div>
+
+    <div class="card">
+      <h2>硬约束（排除项 & 锁定项）</h2>
+      <div class="grid grid-2">
+        <div>
+          <label class="f">排除颜色（逗号分隔）</label>
+          <input type="text" id="excludeColors" placeholder="例如：红色, 荧光色" value="">
+        </div>
+        <div>
+          <label class="f">排除版型（逗号分隔）</label>
+          <input type="text" id="excludeSilhouettes" placeholder="例如：Oversize" value="">
+        </div>
+      </div>
+      <p class="small mt8">锁定项在穿搭橱窗页操作（先生成方案后可锁定单品再重规划）。</p>
+    </div>
+
+    <button class="btn btn-primary mt16" onclick="saveReq()">生成穿搭方案</button>
+  </div>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/engine.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    APP.initNav("requirement");
+
+    function fillDemo() {
+      document.getElementById("occasion").value = "上课与日常通勤";
+      document.getElementById("temperature").value = "15-20度，秋季";
+      document.getElementById("budget").value = "500";
+      document.getElementById("size_top").value = "M";
+      document.getElementById("size_bottom").value = "L";
+      document.getElementById("size_out").value = "M";
+      document.getElementById("size_shoe").value = "40";
+      document.getElementById("excludeColors").value = "";
+      document.getElementById("excludeSilhouettes").value = "";
+      APP.log("demo_req_filled", {});
+      alert("已填入演示需求（上课通勤、500元、M/L/40码）。");
+    }
+
+    function saveReq() {
+      const item = APP.load(APP.KEYS.item);
+      if (!item) { alert("请先在第 1 步录入衣物。"); location.href = "garment-upload.html"; return; }
+
+      const tag = (v) => v.split(/[,，]/).map((s) => s.trim()).filter(Boolean);
+      const budget = parseInt(document.getElementById("budget").value, 10);
+      if (!(budget > 0)) { alert("预算必须为正数。"); return; }
+
+      const req = {
+        occasion: document.getElementById("occasion").value,
+        temperature_text: document.getElementById("temperature").value.trim(),
+        budget_fen: Math.round(budget * 100),
+        size_requirements: {
+          上衣: document.getElementById("size_top").value,
+          下装: document.getElementById("size_bottom").value,
+          外套: document.getElementById("size_out").value,
+          鞋类: document.getElementById("size_shoe").value,
+        },
+        hard: {
+          exclude_colors: tag(document.getElementById("excludeColors").value),
+          exclude_silhouettes: tag(document.getElementById("excludeSilhouettes").value),
+          exclude_categories: [],
+          max_budget_fen: Math.round(budget * 100),
+          locked_items: APP.load(APP.KEYS.locked, []),
+        },
+        soft_preferences: {},
+      };
+      APP.save(APP.KEYS.req, req);
+      APP.log("requirements_confirmed", { occasion: req.occasion, budget_fen: req.budget_fen });
+
+      const r = APP.generatePlansFromState();
+      if (!r.ok) { alert("未生成任何方案：" + r.message); return; }
+      location.href = "window.html";
+    }
+  </script>
+</body>
+</html>

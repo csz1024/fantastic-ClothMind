@@ -1,0 +1,59 @@
+{
+  "description": "方案单品明细表",
+  "fields": [
+    {
+      "name": "record_id",
+      "type": "string",
+      "required": true,
+      "description": "记录唯一标识"
+    },
+    {
+      "name": "plan_id",
+      "type": "string",
+      "required": true,
+      "description": "关联方案ID"
+    },
+    {
+      "name": "source_type",
+      "type": "string",
+      "required": true,
+      "description": "来源：closet(已有)/merchant(商家)"
+    },
+    {
+      "name": "source_item_id",
+      "type": "string",
+      "required": true,
+      "description": "来源衣物ID或SKU"
+    },
+    {
+      "name": "variant_id",
+      "type": "string",
+      "required": false,
+      "description": "变体ID（商家商品）"
+    },
+    {
+      "name": "outfit_role",
+      "type": "string",
+      "required": true,
+      "description": "搭配角色：上衣/下装/外套/鞋类/包饰"
+    },
+    {
+      "name": "quantity",
+      "type": "integer",
+      "required": true,
+      "description": "数量"
+    },
+    {
+      "name": "locked",
+      "type": "boolean",
+      "required": true,
+      "description": "是否锁定"
+    },
+    {
+      "name": "replacement_reason",
+      "type": "string",
+      "required": false,
+      "description": "替换原因"
+    }
+  ]
+}
